@@ -2,13 +2,16 @@
 
 *A mostly reasonable approach to CSS-in-JavaScript*
 
+*We will mostly be using patterns from styled-components but the airbnb styles are left here as a reminder;
+especially worth noting is themes and units, and inline.
+
 ## Table of Contents
 
 1. [Naming](#naming)
-1. [Ordering](#ordering)
-1. [Nesting](#nesting)
-1. [Inline](#inline)
-1. [Themes](#themes)
+2. [Ordering](#ordering)
+3. [Nesting](#nesting)
+4. [Inline](#inline)
+5. [Themes](#themes)
 
 ## Naming
 
@@ -153,7 +156,7 @@
 
 ## Ordering
 
-  - Define styles after the component.
+  - Define styles in a separate file and 
 
     > Why? We use a higher-order component to theme our styles, which is naturally used after the component definition. Passing the styles object directly to this function reduces indirection.
 

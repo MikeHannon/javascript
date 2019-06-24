@@ -21,6 +21,7 @@ This style guide is mostly based on the standards that are currently prevalent i
   1. [Methods](#methods)
   1. [Ordering](#ordering)
   1. [`isMounted`](#ismounted)
+  2. [`Composition and Inheritance`](#composition-verus-inheritance)
 
 ## Basic Rules
 
@@ -29,6 +30,7 @@ This style guide is mostly based on the standards that are currently prevalent i
   - Always use JSX syntax.
   - Do not use `React.createElement` unless you’re initializing the app from a file that is not JSX.
   - [`react/forbid-prop-types`](https://github.com/yannickcr/eslint-plugin-react/blob/master/docs/rules/forbid-prop-types.md) will allow `arrays` and `objects` only if it is explicitly noted what `array` and `object` contains, using `arrayOf`, `objectOf`, or `shape`.
+  - Avoid multi-renders, rather make these conditional or partial rendering events into discrete components.  This might require refactoring or passing lots of props; however, it will make the code more testable and allow those sub-renders to be used in other parts of the application.
 
 ## Class vs `React.createClass` vs stateless
 
@@ -550,7 +552,7 @@ We don’t recommend using indexes for keys if the order of items may change.
 
   - Bind event handlers for the render method in the constructor. eslint: [`react/jsx-no-bind`](https://github.com/yannickcr/eslint-plugin-react/blob/master/docs/rules/jsx-no-bind.md)
 
-    > Why? A bind call in the render path creates a brand new function on every single render. Do not use arrow functions in class fields, because it makes them [challenging to test and debug, and can negatively impact performance](https://medium.com/@charpeni/arrow-functions-in-class-properties-might-not-be-as-great-as-we-think-3b3551c440b1), and because conceptually, class fields are for data, not logic.
+    > Why? A bind call in the render path creates a brand new function on every single render. Do not use arrow functions in class fields, because it makes them [challenging to test and debug, and can negatively impact performance](https://medium.com/@charpeni/arrow-functions-in-class-properties-might-not-be-as-great-as-we-think-3b3551c440b1), and because conceptually, class fields are for data, not logic.  After reading the comments on the above article and the fact that the react team uses arrow functions in their components to bind; we are going to prefer arrow binding.
 
     ```jsx
     // bad
@@ -564,7 +566,7 @@ We don’t recommend using indexes for keys if the order of items may change.
       }
     }
 
-    // very bad
+    // preferred (syntactic sugar to bind in constructor)
     class extends React.Component {
       onClickDiv = () => {
         // do stuff
@@ -713,21 +715,41 @@ We don’t recommend using indexes for keys if the order of items may change.
 
   [anti-pattern]: https://facebook.github.io/react/blog/2015/12/16/ismounted-antipattern.html
 
-## Translation
+## `Class Accessors`
+  In JSX classes, don't use setters but you can use getters.
 
-  This JSX/React style guide is also available in other languages:
+    ```jsx
+    import React from 'react';
+    import PropTypes from 'prop-types';
 
-  - ![cn](https://raw.githubusercontent.com/gosquared/flags/master/flags/flags/shiny/24/China.png) **Chinese (Simplified)**: [JasonBoy/javascript](https://github.com/JasonBoy/javascript/tree/master/react)
-  - ![tw](https://raw.githubusercontent.com/gosquared/flags/master/flags/flags/shiny/24/Taiwan.png) **Chinese (Traditional)**: [jigsawye/javascript](https://github.com/jigsawye/javascript/tree/master/react)
-  - ![es](https://raw.githubusercontent.com/gosquared/flags/master/flags/flags/shiny/24/Spain.png) **Español**: [agrcrobles/javascript](https://github.com/agrcrobles/javascript/tree/master/react)
-  - ![jp](https://raw.githubusercontent.com/gosquared/flags/master/flags/flags/shiny/24/Japan.png) **Japanese**: [mitsuruog/javascript-style-guide](https://github.com/mitsuruog/javascript-style-guide/tree/master/react)
-  - ![kr](https://raw.githubusercontent.com/gosquared/flags/master/flags/flags/shiny/24/South-Korea.png) **Korean**: [apple77y/javascript](https://github.com/apple77y/javascript/tree/master/react)
-  - ![pl](https://raw.githubusercontent.com/gosquared/flags/master/flags/flags/shiny/24/Poland.png) **Polish**: [pietraszekl/javascript](https://github.com/pietraszekl/javascript/tree/master/react)
-  - ![Br](https://raw.githubusercontent.com/gosquared/flags/master/flags/flags/shiny/24/Brazil.png) **Portuguese**: [ronal2do/javascript](https://github.com/ronal2do/airbnb-react-styleguide)
-  - ![ru](https://raw.githubusercontent.com/gosquared/flags/master/flags/flags/shiny/24/Russia.png) **Russian**: [leonidlebedev/javascript-airbnb](https://github.com/leonidlebedev/javascript-airbnb/tree/master/react)
-  - ![th](https://raw.githubusercontent.com/gosquared/flags/master/flags/flags/shiny/24/Thailand.png) **Thai**: [lvarayut/javascript-style-guide](https://github.com/lvarayut/javascript-style-guide/tree/master/react)
-  - ![tr](https://raw.githubusercontent.com/gosquared/flags/master/flags/flags/shiny/24/Turkey.png) **Turkish**: [alioguzhan/react-style-guide](https://github.com/alioguzhan/react-style-guide)
-  - ![ua](https://raw.githubusercontent.com/gosquared/flags/master/flags/flags/shiny/24/Ukraine.png) **Ukrainian**: [ivanzusko/javascript](https://github.com/ivanzusko/javascript/tree/master/react)
-  - ![vn](https://raw.githubusercontent.com/gosquared/flags/master/flags/flags/shiny/24/Vietnam.png) **Vietnam**: [uetcodecamp/jsx-style-guide](https://github.com/UETCodeCamp/jsx-style-guide)
+    const propTypes = {
+      id: PropTypes.number.isRequired,
+      url: PropTypes.string.isRequired,
+      text: PropTypes.string,
+    };
+
+    ...
+      // ok use as appropriate; but avoid in non .jsx files per javascript linting rules.
+      get value(){
+        return 'I am a value'
+      }
+    ...
+    }
+
+    Link.propTypes = propTypes;
+    Link.defaultProps = defaultProps;
+
+    export default Link;
+    ```
+
+## `Composition verus Inheritance`
+
+In REACT jsx files we are going to favor composition over inheritance.  React was designed as a uni-directional graph where component state is regulated only by what it explicitly receives from a parent component or self-regulated.  Composition maintains this downward approach.  If we are looking at a component we know a) what props it can receive from a parent (explicit), b) what methods it contains (explicit) and what it returns (explicitly -- even if these can be dynamic via this.props.children).
+
+https://reactjs.org/docs/composition-vs-inheritance.html
+
+In jsx files of other types, if you want to make inheritance hierarchies that is fine and these can be composed into React elements as appropriate.
+
+
 
 **[⬆ back to top](#table-of-contents)**
